@@ -1,0 +1,61 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: order-service
+  labels:
+    app: order-service
+spec:
+  replicas: 2 # Run 2 instances for basic high availability
+  selector:
+    matchLabels:
+      app: order-service
+  template:
+    metadata:
+      labels:
+        app: order-service
+    spec:
+      containers:
+      - name: order-service
+        image: order-service:1.0.0
+        imagePullPolicy: Never # Never pull the image, use the local image # Use local image, don't pull from registry
+        ports:
+        - name: grpc-port
+          port: 9090
+          protocol: TCP
+        - name: http-port
+          port: 8081
+          protocol: TCP
+        livenessProbe:
+          httpGet:
+            path: /actuator/health
+            port: 8081
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /actuator/health
+            port: 8081
+          initialDelaySeconds: 5
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+        resources:
+          requests:
+            memory: "512Mi"
+            cpu: "250m"
+          limits:
+            memory: "1Gi"
+            cpu: "500m"
+        volumeMounts:
+          - name:  config-volume
+            mountPath:  /app/config
+            readOnly: true
+        env:
+        - name: SPRING_CONFIG_LOCATION
+          value: "classpath:/application.yml,file:/app/config/application.yml"
+      volumes:
+        - name:  config-volume
+          configMap:
+            name: order-service-config
