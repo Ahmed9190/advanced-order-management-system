@@ -1,0 +1,73 @@
+syntax = "proto3";
+
+option java_multiple_files = true;
+option java_package = "com.orderms.grpc.generated";
+option java_outer_classname = "OrderServiceProto";
+
+package order;
+
+service OrderService {
+  rpc CreateOrder(CreateOrderRequest) returns (OrderResponse);
+  rpc GetOrder(GetOrderRequest) returns (OrderResponse);
+  rpc UpdateOrderStatus(UpdateOrderStatusRequest) returns (OrderResponse);
+  rpc ListCustomerOrders(ListOrdersRequest) returns (ListOrdersResponse);
+}
+
+// Requests
+message CreateOrderRequest {
+  string customer_id = 1;
+  repeated OrderItem items = 2;
+  string delivery_address = 3;
+  string payment_method = 4;
+}
+
+message GetOrderRequest { string order_id = 1; }
+
+message UpdateOrderStatusRequest {
+  string order_id = 1;
+  OrderStatus status = 2;
+}
+
+message ListOrdersRequest {
+  string customer_id = 1;
+  int32 page = 2;
+  int32 limit = 3;
+}
+
+// Responses
+message OrderResponse {
+  string order_id = 1;
+  string customer_id = 2;
+  repeated OrderItem items = 3;
+  string delivery_address = 4;
+  string payment_method = 5;
+  OrderStatus status = 6;
+  int64 created_at = 7;
+  int64 updated_at = 8;
+  double total_amount = 9;
+}
+
+message ListOrdersResponse {
+  repeated OrderResponse orders = 1;
+  int32 total_count = 2;
+  int32 page = 3;
+  bool has_next = 4;
+}
+
+// Domain Objects
+message OrderItem {
+  string product_id = 1;
+  string product_name = 2;
+  int32 quantity = 3;
+  double unit_price = 4;
+  double total_price = 5;
+}
+
+enum OrderStatus {
+  PENDING = 0;
+  CONFIRMED = 1;
+  PROCESSING = 2;
+  SHIPPED = 3;
+  DELIVERED = 4;
+  CANCELLED = 5;
+}
